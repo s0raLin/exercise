@@ -1,6 +1,6 @@
 import * as THREE from "three";
 // import gsap from "gsap";
-import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { OrbitControls, ThreeMFLoader } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
 import { string } from "three/tsl";
 import gsap from "gsap";
@@ -9,18 +9,18 @@ import gsap from "gsap";
  * Debug
  */
 const gui = new GUI({
-    width: 300,
-    title: "调试界面",
-    closeFolders: false
+  width: 300,
+  title: "调试界面",
+  closeFolders: false,
 });
 // gui.close();
 // gui.hide();
 
 window.addEventListener("keydown", (event) => {
-    if (event.key == 'h') {
-        gui.show(gui._hidden)
-    }
-})
+  if (event.key == "h") {
+    gui.show(gui._hidden);
+  }
+});
 
 //光标
 const cursor = {
@@ -32,6 +32,34 @@ window.addEventListener("mousemove", (event) => {
   cursor.y = -(event.clientY / sizes.height - 0.5);
 });
 
+// 纹理
+// const image = new Image();
+// const texture = new THREE.Texture(image);
+// image.onload = () => {
+//   texture.needsUpdate = true;
+// };
+// image.src = "png";
+const loadingManager = new THREE.LoadingManager();
+loadingManager.onLoad = () => {};
+const textureLoader = new THREE.TextureLoader(loadingManager);
+const texture = textureLoader.load("/texture/_.jpeg");
+const texture2 = textureLoader.load("/texture/tex.png");
+
+texture2.generateMipmaps = false;
+texture2.minFilter = THREE.NearestFilter;
+texture2.magFilter = THREE.NearestFilter;
+// const texture = textureLoader.load(
+//   "png",
+//    () => {
+//      console.log("load");
+//    },
+//   () => {
+//      console.log("progress");
+//    },
+//   () => {
+//      console.log("error");
+//   },
+// );
 //画布
 const canvas = document.getElementById("webgl")!!;
 
@@ -45,51 +73,77 @@ const scene = new THREE.Scene();
 // 添加物体
 // 几何体
 const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
-// 材质
-const debugObject = {
-  color: "#e9b66a",
-  spin() {
-    gsap.to(mesh.rotation, { y: mesh.rotation.y + Math.PI * 2 });
-  },
-  subdivision: 2,
-};
-const material = new THREE.MeshBasicMaterial({
-  color: debugObject.color,
-  wireframe: true,
-});
-const mesh = new THREE.Mesh(geometry, material);
-scene.add(mesh);
+const geometry1 = new THREE.TubeGeometry();
+const geometry2 = new THREE.ConeGeometry();
+const material2 = new THREE.MeshBasicMaterial({ color: "red" });
+const mesh1 = new THREE.Mesh(
+  new THREE.SphereGeometry(),
+  new THREE.MeshBasicMaterial({ color: "red" }),
+);
+const mesh2 = new THREE.Mesh(
+  new THREE.LatheGeometry(),
+  new THREE.MeshBasicMaterial({ color: "red" }),
+);
+const mesh3 = new THREE.Mesh(
+  new THREE.ConeGeometry(),
+  new THREE.MeshBasicMaterial({ color: "red" }),
+);
+mesh1.position.x = -2;
+mesh3.position.x = 2;
+const group = new THREE.Group();
+group.add(mesh1);
+group.add(mesh2);
+group.add(mesh3);
+scene.add(group);
 
-const cubeTweaks = gui.addFolder("立方体");
-cubeTweaks.add(mesh.position, "y").min(-3).max(3).step(0.01).name("高度");
-cubeTweaks.add(mesh, "visible").name("可见性");
-cubeTweaks.add(material, "wireframe").name("线框模式");
-cubeTweaks
-  .addColor(debugObject, "color")
-  .name("颜色")
-  .onChange(() => {
-    material.color.set(debugObject.color);
-  });
+// // 材质
+// const debugObject = {
+//   color: "#e9b66a",
+//   spin() {
+//     gsap.to(mesh.rotation, { y: mesh.rotation.y + Math.PI * 2 });
+//   },
+//   subdivision: 2,
+// };
+// // const material = new THREE.MeshBasicMaterial({
+// //   color: debugObject.color,
+// //   wireframe: true,
+// // });
+// const material = new THREE.MeshBasicMaterial({
+//   map: texture2,
+// });
+// const mesh = new THREE.Mesh(geometry, material);
+// scene.add(mesh);
 
-cubeTweaks.add(debugObject, "spin").name("旋转");
+// const cubeTweaks = gui.addFolder("立方体");
+// cubeTweaks.add(mesh.position, "y").min(-3).max(3).step(0.01).name("高度");
+// cubeTweaks.add(mesh, "visible").name("可见性");
+// cubeTweaks.add(material, "wireframe").name("线框模式");
+// cubeTweaks
+//   .addColor(debugObject, "color")
+//   .name("颜色")
+//   .onChange(() => {
+//     material.color.set(debugObject.color);
+//   });
 
-cubeTweaks
-  .add(debugObject, "subdivision")
-  .min(1)
-  .max(20)
-  .step(1)
-  .name("三角形细分")
-  .onFinishChange(() => {
-    mesh.geometry.dispose(); //销毁旧的几何体
-    mesh.geometry = new THREE.BoxGeometry(
-      1,
-      1,
-      1,
-      debugObject.subdivision,
-      debugObject.subdivision,
-      debugObject.subdivision,
-    );
-  });
+// cubeTweaks.add(debugObject, "spin").name("旋转");
+
+// cubeTweaks
+//   .add(debugObject, "subdivision")
+//   .min(1)
+//   .max(20)
+//   .step(1)
+//   .name("三角形细分")
+//   .onFinishChange(() => {
+//     mesh.geometry.dispose(); //销毁旧的几何体
+//     mesh.geometry = new THREE.BoxGeometry(
+//       1,
+//       1,
+//       1,
+//       debugObject.subdivision,
+//       debugObject.subdivision,
+//       debugObject.subdivision,
+//     );
+//   });
 
 // const positionsArray = new Float32Array([
 //     0,0,0,
@@ -208,7 +262,7 @@ const camera = new THREE.PerspectiveCamera(
 // camera.position.x = 2;
 // camera.position.y = 2;
 camera.position.z = 3;
-camera.lookAt(mesh.position);
+// camera.lookAt(mesh.position);
 scene.add(camera);
 
 const controls = new OrbitControls(camera, canvas);
@@ -253,7 +307,8 @@ const tick = () => {
   //阻尼更新控制器
   controls.update();
 
-  camera.lookAt(mesh.position);
+
+  // camera.lookAt(mesh.position);
   //更新物体
   //   mesh.rotation.y = elapsedTime;
   // 渲染器
